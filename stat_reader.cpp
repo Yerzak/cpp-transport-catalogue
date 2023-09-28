@@ -4,19 +4,19 @@
 #include<sstream>
 namespace project {
     namespace READING {
-        std::string ReadLineSearch() {
+        std::string ReadLineSearch(std::istream& input) {
             std::string s;
-            getline(std::cin, s);
+            getline(input, s);
             return s;
         }
-        std::vector<std::string> ReadLineWithNumberSearch() {
+        std::vector<std::string> ReadLineWithNumberSearch(std::istream& input) {
             size_t command_count;
-            std::cin >> command_count;
+            input >> command_count;
             std::vector<std::string> lines;
             lines.reserve(command_count + 1);
             std::string line;
             for (size_t i = 0; i <= command_count; ++i) {
-                lines.push_back(ReadLineAdd());
+                lines.push_back(ReadLineSearch(input));
             }
             lines.erase(lines.begin());
             return lines;

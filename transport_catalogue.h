@@ -46,15 +46,15 @@ namespace project {
     }
     class TransportCatalogue {
     public:
-        void AddBus(std::pair<std::string, std::vector<std::string>> bus_data);
-        void AddStop(std::tuple<std::string, double, double, std::string> stop_data);
-        BusInfo FindBusInfo(std::string name);
+        void AddBus(BusBefore& bus_data);
+        void AddStop(StopBefore& stop_data);
+        BusInfo FindBusInfo(const std::string& name);
         Bus* FindBus(std::string_view bus);
         void SetDistance(Stop* from, Stop* to, size_t distance);
         size_t GetDistance(Stop* from, Stop* to);
-        double GetCurvature(size_t fact_distance, std::vector<std::string_view> road);
+        double GetCurvature(size_t fact_distance, const std::vector<std::string_view>& road);
         Stop* FindStop(std::string_view stop);
-        std::pair<std::string, std::unordered_set<Bus*>> FindStopInfo(std::string name);
+        std::pair<std::string, std::unordered_set<Bus*>> FindStopInfo(const std::string& name);
         size_t GetBusCount();
         size_t GetStopCount();
 

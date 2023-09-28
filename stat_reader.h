@@ -3,8 +3,8 @@
 #include "transport_catalogue.h"
 namespace project {
     namespace READING {
-        std::string ReadLineSearch();//прочитать одну строку
-        std::vector<std::string> ReadLineWithNumberSearch();//прочитать всё
+        std::string ReadLineSearch(std::istream& input);//прочитать одну строку
+        std::vector<std::string> ReadLineWithNumberSearch(std::istream& input);//прочитать всё
     }
     namespace PARSING {
         std::string ParseSearchLine(std::string line);

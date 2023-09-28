@@ -4,13 +4,13 @@
 namespace project {
 
     namespace READING {
-        std::string ReadLineAdd() {
+        std::string ReadLineAdd(std::istream& input) {
             std::string s;
-            getline(std::cin, s);
+            getline(input, s);
             return s;
         }
 
-        std::vector<std::string> SortInput(std::vector<std::string> lines) {
+        std::vector<std::string> SortInput(const std::vector<std::string>& lines) {
             std::vector<std::string> result;
             std::vector<std::string> buses;
             std::vector<std::string> stops_with_length;
@@ -42,14 +42,14 @@ namespace project {
             }
             return result;
         }
-        std::vector<std::string> ReadLineWithNumberAdd() {
+        std::vector<std::string> ReadLineWithNumberAdd(std::istream& input) {
             size_t command_count;
-            std::cin >> command_count;
+            input >> command_count;
             std::vector<std::string> lines;
             lines.reserve(command_count + 1);
             std::string line;
             for (size_t i = 0; i <= command_count; ++i) {
-                lines.push_back(ReadLineAdd());
+                lines.push_back(ReadLineAdd(input));
             }
             lines.erase(lines.begin());
             return std::move(SortInput(lines));
@@ -71,7 +71,7 @@ namespace project {
             return false;
         }
 
-        std::pair<std::string, std::vector<std::string>> ParseBus(std::string& line) {
+        BusBefore ParseBus(std::string& line) {
             size_t point = line.find(':');
             size_t space = line.find(' ');
             size_t begin = line.find_first_not_of(' ', space);
@@ -101,32 +101,33 @@ namespace project {
                 }
             }
             road.shrink_to_fit();
-            return std::pair(name, road);
+            return { name, road };
         }
 
-        std::tuple<std::string, double, double, std::string> ParseStop(std::string& line) {
+        StopBefore ParseStop(std::string& line) {
             size_t point = line.find(':');
             size_t space = line.find(' ');
             size_t begin = line.find_first_not_of(' ', space);
-            std::string name = line.substr(begin, point - begin);//нашли имя
+            StopBefore exemp;
+            exemp.name = line.substr(begin, point - begin);//нашли имя
             std::string query = line.substr(point + 2, line.size());//отделили координаты и, возможно, расстояние от имени
             size_t lat_pos_begin = query.find_first_not_of(' ');
             size_t lat_pos_end = query.find(',');
             std::string lat = std::move(query.substr(lat_pos_begin, lat_pos_end - lat_pos_begin));
-            double latitude = atof(lat.c_str());
+            exemp.lat = atof(lat.c_str());
             query = query.substr(lat_pos_end + 2, query.size());
             size_t lon_pos_begin = query.find_first_not_of(' ');
             size_t point2 = query.find(',');
             size_t lon_pos_end = std::min(query.find_last_not_of(' ') + 1, point2);
             std::string lon = std::move(query.substr(lon_pos_begin, lon_pos_end - lon_pos_begin));
-            double longtitude = atof(lon.c_str());
-            std::string length_info;
+            exemp.lng = atof(lon.c_str());
+            //std::string length_info;
             if (point2 != query.npos) {
                 query = query.substr(point2 + 1, query.size());
                 size_t length_begin = query.find_first_not_of(' ');
-                length_info = std::move(query.substr(length_begin, query.size()));
+                exemp.stop_info = std::move(query.substr(length_begin, query.size()));
             }
-            return std::tuple(std::move(name), latitude, longtitude, std::move(length_info));
+            return exemp;
         }
     }
 }
