@@ -1,5 +1,4 @@
 #pragma once
-
 #include <cmath>
 namespace geo {
     struct Coordinates {
@@ -24,4 +23,4 @@ namespace geo {
             + cos(from.lat * dr) * cos(to.lat * dr) * cos(abs(from.lng - to.lng) * dr))
             * earth_radius;
     }
-}
+}//namespace geo
