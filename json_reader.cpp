@@ -1,7 +1,7 @@
 #include "json_reader.h"
 #include <unordered_set>
 
-StopBefore ParseStop(std::map<std::string, json::Node> stop) {
+StopBefore JSONReader::ParseStop(std::map<std::string, json::Node> stop) {
     std::map<std::string, size_t> length_to;
     for (auto& [to, len] : stop.at("road_distances").AsMap()) {
         length_to.emplace(std::move(to), static_cast<size_t>(len.AsInt()));
@@ -14,7 +14,7 @@ StopBefore ParseStop(std::map<std::string, json::Node> stop) {
     return sb;
 }
 
-BusBefore ParseBus(std::map<std::string, json::Node> bus) {
+BusBefore JSONReader::ParseBus(std::map<std::string, json::Node> bus) {
     std::vector<std::string> road;
     for (auto& stop : bus.at("stops").AsArray()) {
         road.push_back(std::move(stop.AsString()));
@@ -26,7 +26,7 @@ BusBefore ParseBus(std::map<std::string, json::Node> bus) {
     return bb;
 }
 
-void MakeBaseRequests(std::vector<json::Node>& base, project::TransportCatalogue& tc) {
+void JSONReader::MakeBaseRequests(std::vector<json::Node>& base) {
     std::vector<StopBefore> stop_before;
     std::vector<BusBefore> bus_before;
     for (auto& object : base) {//преобразуем информацию об остановках и маршрутах в удобный формат
@@ -46,7 +46,7 @@ void MakeBaseRequests(std::vector<json::Node>& base, project::TransportCatalogue
     }
 }
 
-renderer::MapRenderer MakeRenderSettings(std::map<std::string, json::Node> settings) {
+renderer::MapRenderer JSONReader::MakeRenderSettings(std::map<std::string, json::Node> settings) {
     renderer::MapRenderer mp;
     if (settings.count("width") && !settings.at("width").IsNull()) {
         mp.width = settings.at("width").AsDouble();
@@ -132,7 +132,7 @@ renderer::MapRenderer MakeRenderSettings(std::map<std::string, json::Node> setti
     return mp;
 }
 
-std::vector<std::map<std::string, json::Node>> MakeStatRequests(std::vector<json::Node>& stat, RequestHandler& rh) {
+std::vector<std::map<std::string, json::Node>> JSONReader::MakeStatRequests(std::vector<json::Node>& stat, RequestHandler& rh) {
     std::vector <std::map<std::string, json::Node>> result;
     result.reserve(stat.size());
     for (auto& req_node : stat) {//идем по массиву запросов
@@ -171,7 +171,7 @@ std::vector<std::map<std::string, json::Node>> MakeStatRequests(std::vector<json
         }
         else if (request_.at("type").AsString() == "Map") {
             //СЮДА МЫ ПЕРЕНОСИМ ОБРАБОТКУ RENDER-sETTINGS И ГРАФИЧЕСКИЙ ВЫВОД ИЗ MAKE-REQUESTS
-            auto map_result = rh.RenderMap();
+            auto map_result = rh.RenderThisMap();
             std::ostringstream output;
             map_result.Render(output);
             std::string out_info = std::move(output.str());
@@ -182,10 +182,10 @@ std::vector<std::map<std::string, json::Node>> MakeStatRequests(std::vector<json
     return result;
 }
 
-std::vector<std::map<std::string, json::Node>> MakeRequests(std::istream& input, project::TransportCatalogue& tc) {
+std::vector<std::map<std::string, json::Node>> JSONReader::MakeRequests(std::istream& input) {
     auto requests = std::move(json::LoadNode(input));//превратили входные данные в мапу
     auto base = std::move(requests.AsMap().at("base_requests").AsArray());//выделили запросы на добавление - теперь вектор
-    MakeBaseRequests(base, tc);
+    MakeBaseRequests(base);
     auto mp = MakeRenderSettings(requests.AsMap().at("render_settings").AsMap());
     RequestHandler rh(tc, mp);
     auto stat = std::move(requests.AsMap().at("stat_requests").AsArray());//выделили запросы на поиск - теперь вектор

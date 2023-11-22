@@ -33,11 +33,9 @@ public:
 
     // Возвращает маршруты, проходящие через
     const std::unordered_set<BusPtr>* GetBusesByStop(const std::string_view& stop_name) const;
-    svg::Text RenderBusText(svg::Point pos, svg::Color color, const std::string& data, bool IsUnder) const;
-    svg::Document RenderBuses(renderer::SphereProjector& sp, std::map<std::string, std::vector<geo::Coordinates>>& routes_with_coords) const;
-    void RenderStops(svg::Document& res, std::map<std::string, svg::Point>& points) const;
+
     // Этот метод будет нужен в следующей части итогового проекта
-    svg::Document RenderMap() const;
+    svg::Document RenderThisMap() const;
 
 private:
     // RequestHandler использует агрегацию объектов "Транспортный Справочник" и "Визуализатор Карты"

@@ -7,7 +7,8 @@
 
 int main() {
     project::TransportCatalogue tc;
-    auto res = std::move(MakeRequests(std::cin, tc));
+    JSONReader reader(tc);
+    auto res = std::move(reader.MakeRequests(std::cin));
     json::Document doc(json::Node(json::Array(res.begin(), res.end())));
     json::Print(doc, std::cout);
     return 0;

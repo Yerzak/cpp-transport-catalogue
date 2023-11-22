@@ -25,11 +25,13 @@
 
 #include "svg.h"
 #include "geo.h"
+#include "transport_catalogue.h"
 #include<string>
 #include<vector>
 #include<cstdlib>
 #include<optional>
 #include <algorithm>
+#include <map>
 namespace renderer {
     inline const double EPSILON = 1e-6;
     bool IsZero(double value);
@@ -103,7 +105,8 @@ namespace renderer {
         double max_lat_ = 0;
         double zoom_coeff_ = 0;
     };
-    struct MapRenderer {
+    class MapRenderer {
+    public:
         double width = 1200.0;
         double height = 1200.0;
         double padding = 50.0;
@@ -116,5 +119,12 @@ namespace renderer {
         svg::Color underlayer_color = svg::Rgba{ 255, 255, 255, 0.85 };
         double underlayer_width = 3.0;
         std::vector<svg::Color> color_palette = { std::string("green"), svg::Rgb{255, 160, 0}, std::string("red") };
+
+
+        svg::Text RenderBusText(svg::Point pos, svg::Color color, const std::string& data, bool IsUnder) const;
+        svg::Document RenderBuses(const project::TransportCatalogue& tc, renderer::SphereProjector& sp, std::map<std::string, std::vector<geo::Coordinates>>& routes_with_coords) const;
+        void RenderStops(svg::Document& res, std::map<std::string, svg::Point>& points) const;
+        // Этот метод будет нужен в следующей части итогового проекта
+        svg::Document RenderMap(const project::TransportCatalogue& tc) const;
     };
 }//namespace renderer
