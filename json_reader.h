@@ -8,6 +8,7 @@
 #include "request_handler.h"
 #include "map_renderer.h"
 #include "svg.h"
+#include "json_builder.h"
 /*
  * Здесь можно разместить код наполнения транспортного справочника данными из JSON,
  * а также код обработки запросов к базе и формирование массива ответов в формате JSON
@@ -17,12 +18,12 @@ public:
 	explicit JSONReader(project::TransportCatalogue& tc_)
 		: tc(tc_) {
 	}
-	StopBefore ParseStop(std::map<std::string, json::Node> stop);
-	BusBefore ParseBus(std::map<std::string, json::Node> bus);
-	void MakeBaseRequests(std::vector<json::Node>& base);
-	std::vector<std::map<std::string, json::Node>> MakeStatRequests(std::vector<json::Node>& stat, RequestHandler& rh);
-	renderer::MapRenderer MakeRenderSettings(std::map<std::string, json::Node> settings);
-	std::vector<std::map<std::string, json::Node>> MakeRequests(std::istream& input);
+	StopBefore ParseStop(const std::map<std::string, json::Node>& stop);
+	BusBefore ParseBus(const std::map<std::string, json::Node>& bus);
+	void MakeBaseRequests(const std::vector<json::Node>& base);
+	json::Document MakeStatRequests(std::vector<json::Node>& stat, RequestHandler& rh);
+	renderer::MapRenderer MakeRenderSettings(const std::map<std::string, json::Node>& settings);
+	json::Document MakeRequests(std::istream& input);
 private:
 	project::TransportCatalogue& tc;
 };

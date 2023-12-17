@@ -1,15 +1,16 @@
+#include "json_builder.h"
+#include <iostream>
 #include<fstream>
-#include<iostream>
 #include<string>
 #include "json.h"
 #include "json_reader.h"
 
+using namespace std;
 
 int main() {
-    project::TransportCatalogue tc;
-    JSONReader reader(tc);
-    auto res = std::move(reader.MakeRequests(std::cin));
-    json::Document doc(json::Node(json::Array(res.begin(), res.end())));
-    json::Print(doc, std::cout);
-    return 0;
+	project::TransportCatalogue tc;
+	JSONReader reader(tc);
+	auto res = std::move(reader.MakeRequests(std::cin));
+	json::Print(res, std::cout);
+	return 0;
 }

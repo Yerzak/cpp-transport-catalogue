@@ -1,9 +1,9 @@
 #include "json_reader.h"
 #include <unordered_set>
 
-StopBefore JSONReader::ParseStop(std::map<std::string, json::Node> stop) {
+StopBefore JSONReader::ParseStop(const std::map<std::string, json::Node>& stop) {
     std::map<std::string, size_t> length_to;
-    for (auto& [to, len] : stop.at("road_distances").AsMap()) {
+    for (auto& [to, len] : stop.at("road_distances").AsDict()) {
         length_to.emplace(std::move(to), static_cast<size_t>(len.AsInt()));
     }
     StopBefore sb;
@@ -14,7 +14,7 @@ StopBefore JSONReader::ParseStop(std::map<std::string, json::Node> stop) {
     return sb;
 }
 
-BusBefore JSONReader::ParseBus(std::map<std::string, json::Node> bus) {
+BusBefore JSONReader::ParseBus(const std::map<std::string, json::Node>& bus) {
     std::vector<std::string> road;
     for (auto& stop : bus.at("stops").AsArray()) {
         road.push_back(std::move(stop.AsString()));
@@ -26,16 +26,16 @@ BusBefore JSONReader::ParseBus(std::map<std::string, json::Node> bus) {
     return bb;
 }
 
-void JSONReader::MakeBaseRequests(std::vector<json::Node>& base) {
+void JSONReader::MakeBaseRequests(const std::vector<json::Node>& base) {
     std::vector<StopBefore> stop_before;
     std::vector<BusBefore> bus_before;
     for (auto& object : base) {//преобразуем информацию об остановках и маршрутах в удобный формат
         //для последующей обработки в транспортном справочнике
-        if (object.AsMap().at("type").AsString() == "Stop") {
-            stop_before.push_back(std::move(ParseStop(object.AsMap())));
+        if (object.AsDict().at("type").AsString() == "Stop") {
+            stop_before.push_back(std::move(ParseStop(object.AsDict())));
         }
-        else if (object.AsMap().at("type").AsString() == "Bus") {
-            bus_before.push_back(std::move(ParseBus(object.AsMap())));
+        else if (object.AsDict().at("type").AsString() == "Bus") {
+            bus_before.push_back(std::move(ParseBus(object.AsDict())));
         }
     }
     for (auto& b4 : stop_before) {
@@ -46,7 +46,7 @@ void JSONReader::MakeBaseRequests(std::vector<json::Node>& base) {
     }
 }
 
-renderer::MapRenderer JSONReader::MakeRenderSettings(std::map<std::string, json::Node> settings) {
+renderer::MapRenderer JSONReader::MakeRenderSettings(const std::map<std::string, json::Node>& settings) {
     renderer::MapRenderer mp;
     if (settings.count("width") && !settings.at("width").IsNull()) {
         mp.width = settings.at("width").AsDouble();
@@ -88,7 +88,7 @@ renderer::MapRenderer JSONReader::MakeRenderSettings(std::map<std::string, json:
         else if (settings.at("underlayer_color").IsArray()) {
             int rgba_size = 4;
             auto arr = settings.at("underlayer_color").AsArray();
-            if (arr.size() < rgba_size) {
+            if (static_cast<int>(arr.size()) < rgba_size) {
                 mp.underlayer_color = svg::Rgb(arr[0].AsInt(), arr[1].AsInt(), arr[2].AsInt());
             }
             else {
@@ -111,7 +111,7 @@ renderer::MapRenderer JSONReader::MakeRenderSettings(std::map<std::string, json:
             else if (elem.IsArray()) {
                 int rgba_size = 4;
                 auto arr = elem.AsArray();
-                if (arr.size() < rgba_size) {
+                if (static_cast<int>(arr.size()) < rgba_size) {
                     svg::Rgb rgb;
                     rgb.red = arr[0].AsInt();
                     rgb.green = arr[1].AsInt();
@@ -132,13 +132,15 @@ renderer::MapRenderer JSONReader::MakeRenderSettings(std::map<std::string, json:
     return mp;
 }
 
-std::vector<std::map<std::string, json::Node>> JSONReader::MakeStatRequests(std::vector<json::Node>& stat, RequestHandler& rh) {
-    std::vector <std::map<std::string, json::Node>> result;
-    result.reserve(stat.size());
+json::Document JSONReader::MakeStatRequests(std::vector<json::Node>& stat, RequestHandler& rh) {
+
+    json::Builder builder;//создали объект-строитель
+    builder.StartArray();//начали в нем массив
+
     for (auto& req_node : stat) {//идем по массиву запросов
-        std::map<std::string, json::Node> answer;
-        auto request_ = std::move(req_node.AsMap());//берем один запрос и превращаем его в словарь
-        answer.emplace("request_id", request_.at("id"));
+        builder.StartDict();//в массиве строителя начали словарь
+        auto request_ = std::move(req_node.AsDict());//берем один запрос и превращаем его в словарь
+        builder.Key("request_id").Value(json::Node(request_.at("id")).GetValue());
         if (request_.at("type").AsString() == "Stop") {//если запрос об остановке
             if (auto buses_set_ptr = rh.GetBusesByStop(request_.at("name").AsString())) {//ищем список ее автобусов
                 // - возвращается указатель на сет указателей
@@ -151,22 +153,22 @@ std::vector<std::map<std::string, json::Node>> JSONReader::MakeStatRequests(std:
                     return prev.AsString() < post.AsString();
                     });//не факт, что они отсортированы, т.к. сет содержал указатели, а не имена
                 //поэтому сортируем имена уже в векторе
-                answer.emplace("buses", json::Node(json::Array(bus_list.begin(), bus_list.end())));
+                builder.Key("buses").Value(json::Node(json::Array(bus_list.begin(), bus_list.end())).GetValue());
             }
             else {
-                answer.emplace("error_message", json::Node(std::string("not found")));
+                builder.Key("error_message").Value(json::Node(std::string("not found")).GetValue());
             }
 
         }
         else if (request_.at("type").AsString() == "Bus") {//если запрос об автобусе
             if (auto bus_information = rh.GetBusStat(request_.at("name").AsString())) {// вернется optional BusStat
-                answer.emplace("curvature", json::Node(bus_information->curvature));
-                answer.emplace("route_length", json::Node(static_cast<int>(bus_information->road_length)));
-                answer.emplace("stop_count", json::Node(static_cast<int>(bus_information->road.size())));
-                answer.emplace("unique_stop_count", json::Node(static_cast<int>(bus_information->unique_stops.size())));
+                builder.Key("curvature").Value(json::Node(bus_information->curvature).GetValue()).
+                    Key("route_length").Value(json::Node(static_cast<int>(bus_information->road_length)).GetValue()).
+                    Key("stop_count").Value(json::Node(static_cast<int>(bus_information->road.size())).GetValue()).
+                    Key("unique_stop_count").Value(json::Node(static_cast<int>(bus_information->unique_stops.size())).GetValue());
             }
             else {
-                answer.emplace("error_message", json::Node(std::string("not found")));
+                builder.Key("error_message").Value(json::Node(std::string("not found")).GetValue());
             }
         }
         else if (request_.at("type").AsString() == "Map") {
@@ -175,19 +177,20 @@ std::vector<std::map<std::string, json::Node>> JSONReader::MakeStatRequests(std:
             std::ostringstream output;
             map_result.Render(output);
             std::string out_info = std::move(output.str());
-            answer.emplace("map", json::Node(out_info));
+            builder.Key("map").Value(json::Node(out_info).GetValue());
         }
-        result.push_back(answer);
+        builder.EndDict();
     }
-    return result;
+    builder.EndArray();
+    return json::Document{ builder.Build() };
 }
 
-std::vector<std::map<std::string, json::Node>> JSONReader::MakeRequests(std::istream& input) {
-    auto requests = std::move(json::LoadNode(input));//превратили входные данные в мапу
-    auto base = std::move(requests.AsMap().at("base_requests").AsArray());//выделили запросы на добавление - теперь вектор
+json::Document JSONReader::MakeRequests(std::istream& input) {
+    auto requests = std::move(json::Load(input).GetRoot());//превратили входные данные в мапу
+    auto base = std::move(requests.AsDict().at("base_requests").AsArray());//выделили запросы на добавление - теперь вектор
     MakeBaseRequests(base);
-    auto mp = MakeRenderSettings(requests.AsMap().at("render_settings").AsMap());
+    auto mp = MakeRenderSettings(requests.AsDict().at("render_settings").AsDict());
     RequestHandler rh(tc, mp);
-    auto stat = std::move(requests.AsMap().at("stat_requests").AsArray());//выделили запросы на поиск - теперь вектор
+    auto stat = std::move(requests.AsDict().at("stat_requests").AsArray());//выделили запросы на поиск - теперь вектор
     return std::move(MakeStatRequests(stat, rh));
 }
