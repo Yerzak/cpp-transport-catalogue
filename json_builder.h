@@ -13,7 +13,6 @@ namespace json {
     class DictItemContext;
     class ArrItemContext;
     class KeyItemContext;
-    class ValueItemContext;
     class Builder {
     private:
         Node root_;
@@ -67,23 +66,12 @@ namespace json {
     class KeyItemContext : public BaseContext {
     public:
         KeyItemContext(BaseContext base);
-        ValueItemContext Value(Node::Value val);/////////////////////////////////
+        DictItemContext Value(Node::Value val);/////////////////////////////////
 
         BaseContext EndArray() = delete;
         KeyItemContext Key(std::string word) = delete;
         BaseContext EndDict() = delete;
         Node Build() = delete;
     };//class KeyItemContext
-
-    class ValueItemContext : public BaseContext {
-    public:
-        ValueItemContext(BaseContext base);
-
-        ValueItemContext Value(Node::Value val) = delete;
-        DictItemContext StartDict() = delete;
-        ArrItemContext StartArray() = delete;
-        BaseContext EndArray() = delete;
-        Node Build() = delete;
-    };//class ValueItemContext     
 
 } //namespace json

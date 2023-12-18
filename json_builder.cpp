@@ -157,12 +157,8 @@ namespace json {
     KeyItemContext::KeyItemContext(BaseContext base)
         : BaseContext(base) {
     }
-    ValueItemContext KeyItemContext::Value(Node::Value val) {
-        return ValueItemContext(BaseContext::Value(val));
-    }
-    /*-------------------VALUE ITEM CONTEXT-----------------*/
-    ValueItemContext::ValueItemContext(BaseContext base)
-        : BaseContext(base) {
+    DictItemContext KeyItemContext::Value(Node::Value val) {
+        return DictItemContext(BaseContext::Value(val));
     }
 
 }//namespace json
