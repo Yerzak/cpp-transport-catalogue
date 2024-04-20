@@ -35,9 +35,10 @@ namespace project {
         Stop* FindStop(std::string_view stop) const;
         std::pair<std::string, std::unordered_set<Bus*>> FindStopInfo(const std::string& name) const;
         size_t GetBusCount();
-        size_t GetStopCount();
+        size_t GetStopCount() const;
         const std::unordered_set<Bus*>* GetBusesForStop(std::string_view stop_name) const;
         std::deque<Bus> GetAllBuses() const;
+        std::unordered_map<std::string_view, Stop*> GetAllStops() const;
 
     private:
         std::deque<Stop> list_of_stops;

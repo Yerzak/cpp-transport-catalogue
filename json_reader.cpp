@@ -132,7 +132,7 @@ renderer::MapRenderer JSONReader::MakeRenderSettings(const std::map<std::string,
     return mp;
 }
 
-json::Document JSONReader::MakeStatRequests(std::vector<json::Node>& stat, RequestHandler& rh) {
+json::Document JSONReader::MakeStatRequests(std::vector<json::Node>& stat, RequestHandler& rh, TransportRouter& router) {
 
     json::Builder builder;//создали объект-строитель
     builder.StartArray();//начали в нем массив
@@ -179,6 +179,37 @@ json::Document JSONReader::MakeStatRequests(std::vector<json::Node>& stat, Reque
             std::string out_info = std::move(output.str());
             builder.Key("map").Value(json::Node(out_info).GetValue());
         }
+        else if (request_.at("type").AsString() == "Route") {
+            auto start = request_.at("from").AsString();
+            auto finish = request_.at("to").AsString();
+            //ЗДЕСЬ СТАРТ И ФИНИШ ПЕРЕДАЮТСЯ В ФУНКЦИЮ КЛАССА ДЛЯ ДАЛЬНЕЙШЕГО 
+            // ПОЛУЧЕНИЯ РЕЗУЛЬТАТОВ ВЫЧИСЛЕНИЯ МАРШРУТА            
+            auto optimal_route = router.GetOptimalRoute(start, finish);
+            //ОТСЮДА ФОРМИРУЕТСЯ ОТВЕТ
+            if (optimal_route.has_value()) {
+                auto opt_route = optimal_route.value();
+                builder.Key("total_time").Value(json::Node(static_cast<double>(opt_route.total_time)).GetValue());
+                builder.Key("items").StartArray();
+                for (auto item : opt_route.way) {
+                    builder.StartDict().Key("type");
+                    if (item.type == ActionType::WAIT) {
+                        builder.Value(json::Node("Wait").GetValue()).Key("stop_name").Value(json::Node(std::string(item.name)).GetValue());
+                        builder.Key("time").Value(json::Node(static_cast<double>(item.total_time)).GetValue());
+                    }
+                    else if (item.type == ActionType::BUS) {
+                        builder.Value(json::Node("Bus").GetValue());
+                        builder.Key("bus").Value(json::Node(std::string(item.name)).GetValue());
+                        builder.Key("span_count").Value(json::Node(static_cast<int>(item.span_count)).GetValue());
+                        builder.Key("time").Value(json::Node(static_cast<double>(item.total_time)).GetValue());
+                    }
+                    builder.EndDict();
+                }
+                builder.EndArray();
+            }
+            else {
+                builder.Key("error_message").Value(json::Node("not found").GetValue());
+            }
+        }
         builder.EndDict();
     }
     builder.EndArray();
@@ -190,7 +221,15 @@ json::Document JSONReader::MakeRequests(std::istream& input) {
     auto base = std::move(requests.AsDict().at("base_requests").AsArray());//выделили запросы на добавление - теперь вектор
     MakeBaseRequests(base);
     auto mp = MakeRenderSettings(requests.AsDict().at("render_settings").AsDict());
+    auto [wait_time, velocity] = MakeRoutingSettings(requests.AsDict().at("routing_settings").AsDict());
+    graph::DirectedWeightedGraph<double> graph(tc.GetStopCount());
+    TransportRouter router(wait_time, velocity, graph);
+    router.BuildGraph(tc);
     RequestHandler rh(tc, mp);
     auto stat = std::move(requests.AsDict().at("stat_requests").AsArray());//выделили запросы на поиск - теперь вектор
-    return std::move(MakeStatRequests(stat, rh));
+    return std::move(MakeStatRequests(stat, rh, router));
+}
+
+std::pair<JSONReader::time, JSONReader::vel> JSONReader::MakeRoutingSettings(const std::map<std::string, json::Node>& settings) {
+    return { static_cast<size_t>(settings.at("bus_wait_time").AsInt()), static_cast<size_t>(settings.at("bus_velocity").AsInt()) };
 }

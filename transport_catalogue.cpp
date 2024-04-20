@@ -145,7 +145,7 @@ namespace project {
     size_t TransportCatalogue::GetBusCount() {
         return list_of_buses.size();
     }
-    size_t TransportCatalogue::GetStopCount() {
+    size_t TransportCatalogue::GetStopCount() const {
         return list_of_stops.size();
     }
 
@@ -161,6 +161,10 @@ namespace project {
 
     std::deque<Bus> TransportCatalogue::GetAllBuses() const {
         return list_of_buses;
+    }
+
+    std::unordered_map<std::string_view, Stop*> TransportCatalogue::GetAllStops() const {
+        return stops;
     }
 
 }//namespace project
