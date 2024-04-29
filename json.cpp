@@ -1,5 +1,4 @@
 #include "json.h"
-
 #include <iterator>
 
 namespace json {

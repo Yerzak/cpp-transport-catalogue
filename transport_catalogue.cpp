@@ -1,9 +1,10 @@
 #include "transport_catalogue.h"
 #include "geo.h"
-#include<utility>
+#include <algorithm>
 #include<exception>
 #include<iomanip>
-#include <algorithm>
+#include<utility>
+
 namespace project {
     void TransportCatalogue::AddBus(BusBefore& bus_data) {
         Bus bus;//создали автобус

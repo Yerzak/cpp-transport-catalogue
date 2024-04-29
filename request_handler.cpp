@@ -1,8 +1,9 @@
 #include "request_handler.h"
-#include <map>
-#include <vector>
 #include <algorithm>
 #include <cstdlib>
+#include <map>
+#include <vector>
+
 /*
  * Здесь можно было бы разместить код обработчика запросов к базе, содержащего логику, которую не
  * хотелось бы помещать ни в transport_catalogue, ни в json reader.

@@ -222,9 +222,7 @@ json::Document JSONReader::MakeRequests(std::istream& input) {
     MakeBaseRequests(base);
     auto mp = MakeRenderSettings(requests.AsDict().at("render_settings").AsDict());
     auto [wait_time, velocity] = MakeRoutingSettings(requests.AsDict().at("routing_settings").AsDict());
-    graph::DirectedWeightedGraph<double> graph(tc.GetStopCount());
-    TransportRouter router(wait_time, velocity, graph);
-    router.BuildGraph(tc);
+    TransportRouter router({ wait_time, velocity, tc });
     RequestHandler rh(tc, mp);
     auto stat = std::move(requests.AsDict().at("stat_requests").AsArray());//выделили запросы на поиск - теперь вектор
     return std::move(MakeStatRequests(stat, rh, router));

@@ -1,12 +1,12 @@
 #pragma once
 #include <cstdint>
-#include <iostream>
-#include <sstream>
-#include <memory>
-#include <string>
 #include<deque>
+#include <iostream>
+#include <memory>
 #include <optional>
 #include<stdexcept>
+#include <sstream>
+#include <string>
 #include <variant>
 
 namespace svg {

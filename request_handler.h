@@ -2,10 +2,10 @@
 #include "transport_catalogue.h"
 #include "svg.h"
 #include "map_renderer.h"
+#include <iostream>
 #include <optional>
 #include <string>
 #include <string_view>
-#include <iostream>
 
 /*
  * Здесь можно было бы разместить код обработчика запросов к базе, содержащего логику, которую не

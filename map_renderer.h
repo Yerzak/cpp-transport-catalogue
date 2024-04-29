@@ -26,12 +26,13 @@
 #include "svg.h"
 #include "geo.h"
 #include "transport_catalogue.h"
+#include <algorithm>
+#include<cstdlib>
+#include <map>
+#include<optional>
 #include<string>
 #include<vector>
-#include<cstdlib>
-#include<optional>
-#include <algorithm>
-#include <map>
+
 namespace renderer {
     inline const double EPSILON = 1e-6;
     bool IsZero(double value);
